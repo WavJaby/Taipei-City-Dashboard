@@ -445,6 +445,20 @@ export const maplayerCommonLayout = {
 			2,
 		],
 	},
+	"symbol-palette": {
+		"icon-image": "palette",
+		"icon-size": [
+			"interpolate",
+			["linear"],
+			["zoom"],
+			11.99,
+			1,
+			14,
+			1.5,
+			22,
+			2,
+		],
+	},
 	"symbol-bus": {
 		"icon-image": "bus",
 		"icon-size": [

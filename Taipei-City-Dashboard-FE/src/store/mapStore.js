@@ -189,6 +189,7 @@ export const useMapStore = defineStore("map", {
 		addSymbolSources() {
 			const images = [
 				"metro",
+				"palette",
 				"triangle_green",
 				"triangle_white",
 				"bike_green",
@@ -309,10 +310,12 @@ export const useMapStore = defineStore("map", {
 		},
 		// 3-1. Add a local geojson as a source in mapbox
 		addGeojsonSource(map_config, data) {
+			console.log(map_config);
+			map_config.data = data;
 			if (!["voronoi", "isoline"].includes(map_config.type)) {
 				this.map.addSource(`${map_config.layerId}-source`, {
 					type: "geojson",
-					data: { ...data },
+					data: data,
 				});
 			}
 			if (map_config.type === "arc") {
