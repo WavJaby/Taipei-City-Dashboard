@@ -1,8 +1,9 @@
 <!-- Developed by Taipei Urban Intelligence Center 2023-2024-->
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, watch, onMounted } from "vue";
 import { districtCoordinates } from "../utilities/districtCoordinates";
+import { useDistrictStore, districtsIndex } from "../DistrictStore";
 
 const props = defineProps([
 	"chart_config",
@@ -22,6 +23,8 @@ const emits = defineEmits([
 	"fly"
 ]);
 
+const districtStore = useDistrictStore();
+
 const targetDistrict = ref(null);
 const districtColor = ref(props.chart_config.color[0]);
 const mousePosition = ref({ x: null, y: null });
@@ -39,49 +42,7 @@ const cityName = computed(() => {
 	return cities.find(city => city.value === props.activeCity)?.name
 });
 
-const districts = [
-	"北投區",
-	"士林區",
-	"內湖區",
-	"南港區",
-	"松山區",
-	"信義區",
-	"中山區",
-	"大同區",
-	"中正區",
-	"萬華區",
-	"大安區",
-	"文山區",
-	"新莊區",
-	"淡水區",
-	"汐止區",
-	"板橋區",
-	"三重區",
-	"樹林區",
-	"土城區",
-	"蘆洲區",
-	"中和區",
-	"永和區",
-	"新店區",
-	"鶯歌區",
-	"三峽區",
-	"瑞芳區",
-	"五股區",
-	"泰山區",
-	"林口區",
-	"深坑區",
-	"石碇區",
-	"坪林區",
-	"三芝區",
-	"石門區",
-	"八里區",
-	"平溪區",
-	"雙溪區",
-	"貢寮區",
-	"金山區",
-	"萬里區",
-	"烏來區",
-];
+
 
 // Parse District Data (to support 2D or 3D data)
 const districtData = computed(() => {
@@ -177,22 +138,59 @@ const tooltipPosition = computed(() => {
 });
 
 function toggleActive(e) {
-	targetDistrict.value = e.target.dataset.name;
+	districtStore.toggleHoverDistrict(e.target.dataset.name);
+	// targetDistrict.value = e.target.dataset.name;
 }
 function toggleActiveToNull() {
-	targetDistrict.value = null;
-}
-function updateMouseLocation(e) {
-	mousePosition.value.x = e.pageX;
-	mousePosition.value.y = e.pageY;
+	districtStore.toggleHoverDistrict(null);
+	// targetDistrict.value = null;
 }
 
+let chartBase;
+function updateMouseLocation(e) {
+	const {x,y} = chartBase.getBoundingClientRect();
+
+	districtStore.setToolTipOffset(e.pageX - x, e.pageY - y);
+
+	// mousePosition.value.x = e.pageX;
+	// mousePosition.value.y = e.pageY;
+}
+
+watch(
+	() => districtStore.selectedDistrictIndex,
+	(i) => selectedIndex.value = i,
+	{ immediate: true }
+);
+
+watch(
+	() => districtStore.hoverDistrict,
+	(i) => targetDistrict.value = i,
+	{ immediate: true }
+)
+
+watch(
+	() => districtStore.toolTipOffset,
+	(offset) => {
+		if(!chartBase) return;
+		const {x,y} = chartBase.getBoundingClientRect();
+		mousePosition.value.x = x + offset[0];
+		mousePosition.value.y = y + offset[1];
+	},
+	{ immediate: true }
+)
+
 function handleDataSelection(index) {
+	const indexChange = index !== selectedIndex.value;
+	if (indexChange)
+		districtStore.selectDistrict(index);
+	else
+		districtStore.selectDistrict(null);
+
 	if (!props.map_filter || !props.map_filter_on) {
 		return;
 	}
 
-	if (index !== selectedIndex.value) {
+	if (indexChange) {
 		// Supports filtering by xAxis
 		emits("fly", districtCoordinates[index]);
 		if (props.map_filter.mode === "byParam") {
@@ -200,22 +198,22 @@ function handleDataSelection(index) {
 				"filterByParam",
 				props.map_filter,
 				props.map_config,
-				districts[index],
+				districtsIndex[index],
 				null
 			);
 		}
 		// Supports filtering by xAxis
 		else if (props.map_filter.mode === "byLayer") {
-			emits("filterByLayer", props.map_config, districts[index]);
+			emits("filterByLayer", props.map_config, districtsIndex[index]);
 		}
-		selectedIndex.value = index;
+		// selectedIndex.value = index;
 	} else {
 		if (props.map_filter.mode === "byParam") {
 			emits("clearByParamFilter", props.map_config);
 		} else if (props.map_filter.mode === "byLayer") {
 			emits("clearByLayerFilter", props.map_config);
 		}
-		selectedIndex.value = null;
+		// selectedIndex.value = null;
 	}
 }
 </script>
@@ -225,6 +223,7 @@ function handleDataSelection(index) {
   <div
     v-if="activeChart === 'DistrictChart'"
     class="districtchart"
+		ref="chartBase"
   >
     <div class="districtchart-title">
       <h5>總合</h5>
