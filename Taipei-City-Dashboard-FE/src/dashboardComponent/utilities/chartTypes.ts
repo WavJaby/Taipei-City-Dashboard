@@ -4,6 +4,7 @@ interface chartType {
 
 export const chartTypes: chartType = {
 	DonutChart: "圓餅圖", // V
+	DonutChart3D: "圓餅圖", // V
 	BarChart: "橫向長條圖", // V
 	ColumnChart: "縱向長條圖", // V
 	BarPercentChart: "長條圖(%)", // V

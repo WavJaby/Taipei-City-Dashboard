@@ -11,6 +11,7 @@ import ComponentTag from "./components/ComponentTag.vue";
 import TagTooltip from "./components/TagTooltip.vue";
 import DistrictChart from "./components/DistrictChart.vue";
 import DonutChart from "./components/DonutChart.vue";
+import DonutChart3D from "./components/DonutChart3D.vue";
 import BarChart from "./components/BarChart.vue";
 import TreemapChart from "./components/TreemapChart.vue";
 import ColumnChart from "./components/ColumnChart.vue";
@@ -202,6 +203,8 @@ function returnChartComponent(name, svg) {
 		return svg ? ColumnChartSvg : ColumnChart;
 	case "DonutChart":
 		return svg ? DonutChartSvg : DonutChart;
+	case "DonutChart3D":
+		return svg ? DonutChartSvg : DonutChart3D;
 	case "TreemapChart":
 		return svg ? TreemapChartSvg : TreemapChart;
 	case "BarPercentChart":
