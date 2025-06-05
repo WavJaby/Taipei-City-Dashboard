@@ -28,6 +28,8 @@ const emits = defineEmits([
 const steps = ref(8);
 const districtName = ref("");
 
+let percent = [];
+
 // Donut charts in apexcharts uses a slightly different data format from other chart types
 // As such, the following parsing functions are required
 const parsedSeries = computed(() => {
@@ -57,6 +59,15 @@ const parsedSeries = computed(() => {
 	if (over) {
 		output.push(toParse.slice(steps.value, toParse.length).reduce((a, b) => a + b));
 	}
+	// Sum total
+	let sum = 0;
+	for (const i of output)
+		sum += i;
+
+	percent.length = 0;
+	for (const i of output)
+		percent.push(Math.round((i / sum) * 100));
+
 	return output;
 });
 const parsedLabels = computed(() => {
@@ -116,13 +127,8 @@ const chartOptions = ref({
 			// The class "chart-tooltip" could be edited in /assets/styles/chartStyles.css
 			return (
 				"<div class=\"chart-tooltip\"\>" +
-				"<h6>" +
-				w.globals.labels[seriesIndex] +
-				"</h6>" +
-				"<span>" +
-				series[seriesIndex] +
-				` ${props.chart_config.unit}` +
-				"</span>" +
+				`<h6>${w.globals.labels[seriesIndex]}</h6>` +
+				`<span>${series[seriesIndex]} ${props.chart_config.unit} (${percent[seriesIndex]}%)</span>` +
 				"</div>"
 			);
 		}

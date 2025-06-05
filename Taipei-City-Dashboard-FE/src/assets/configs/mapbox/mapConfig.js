@@ -451,7 +451,7 @@ export const maplayerCommonLayout = {
 			"interpolate",
 			["linear"],
 			["zoom"],
-			11.99,
+			12,
 			1,
 			14,
 			1.5,
