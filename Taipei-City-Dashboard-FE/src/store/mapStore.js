@@ -310,8 +310,29 @@ export const useMapStore = defineStore("map", {
 		},
 		// 3-1. Add a local geojson as a source in mapbox
 		addGeojsonSource(map_config, data) {
-			console.log(map_config);
 			map_config.data = data;
+			if (map_config.type === 'fill-extrusion') {
+				fetch('/api/dev/component/1111/chart?city=' + map_config.city).then(i=>i.json()).then(i => {
+					// calculate index
+					const indexMap = [];
+					for (const { x, y } of i.data[0].data) {
+						const index = data.features.findIndex(i => i.properties['TNAME'] == x);
+						indexMap.push([index, (y * 2) ** 2 + 200]);
+						data.features[index].properties['value'] = y + '仟元';
+					}
+					let time = 0;
+					let id = setInterval(() => {
+						for (let [index, y] of indexMap) {
+							data.features[index].properties['height'] = y * time;
+						}
+						this.map.getSource(`${map_config.layerId}-source`).setData(data);
+
+						time += 0.2;
+						if(time>=1)
+							clearInterval(id);
+					}, 200);
+				});
+			}
 			if (!["voronoi", "isoline"].includes(map_config.type)) {
 				this.map.addSource(`${map_config.layerId}-source`, {
 					type: "geojson",
@@ -357,7 +378,7 @@ export const useMapStore = defineStore("map", {
 							`https://citydashboard.taipei/geo_server/gwc/service/tms/1.0.0/taipei_vioc:${map_config.index}@EPSG:900913@pbf/{z}/{x}/{y}.pbf`,
 						],
 					});
-		
+
 					// 監聽錯誤
 					this.map.on('error', (e) => {
 						if (e.sourceId === `${map_config.layerId}-source`) {
@@ -373,7 +394,7 @@ export const useMapStore = defineStore("map", {
 							);
 						}
 					});
-		
+
 					// 監聽源加載完成
 					const sourceLoaded = new Promise((resolve, reject) => {
 						const checkSource = (e) => {
@@ -389,22 +410,22 @@ export const useMapStore = defineStore("map", {
 								}
 							}
 						};
-						
+
 						this.map.on('sourcedata', checkSource);
-						
+
 						// 設置超時
 						setTimeout(() => {
 							this.map.off('sourcedata', checkSource);
 							reject(new Error('Source load timeout'));
 						}, 10000);
 					});
-		
+
 					// 等待源加載完成後添加圖層
 					await sourceLoaded;
 					this.addMapLayer(map_config);
 
 
-		
+
 				} catch (error) {
 					console.error('Failed to add source:', error);
 					// 清理已添加的源（如果存在）
